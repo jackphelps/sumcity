@@ -14,9 +14,9 @@ function init() {
 	container = document.createElement( 'div' );
 	document.body.appendChild( container );
 
-	camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, - 500, 1000 );
+	camera = new THREE.OrthographicCamera( window.innerWidth / - 1.5, window.innerWidth / 1.5, window.innerHeight / 1.3, window.innerHeight / - 1.5, - 1000, 100000 );
 	camera.position.x = 200;
-	camera.position.y = 150;
+	camera.position.y = 100;
 	camera.position.z = 200;
 
 	scene = new THREE.Scene();
@@ -46,7 +46,7 @@ function init() {
 	// ====== Buildings ================
 
 	var geometry = new THREE.CubeGeometry(50,50,50);
-	var material =	new THREE.MeshLambertMaterial( { color: 0xffbb00, transparent: true, opacity: 0.9} );
+	var material =	new THREE.MeshLambertMaterial( { color: 0xffbb00, transparent: true, opacity: 0.95} );
 
 	for ( var i = 0; i < 100; i++ ) {
 
@@ -81,6 +81,91 @@ function init() {
 		tweens.push(new_tween(i));
 		
 	}
+
+	// ====== Clouds ================
+
+	var cloudsize = 75;
+	var geometry = new THREE.CubeGeometry(cloudsize,cloudsize,cloudsize);
+	var material =	new THREE.MeshLambertMaterial( { color: 0xccccff, transparent:true, opacity:0.7} );
+
+		var cloud = new THREE.Object3D();
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = 0;
+		cube.position.y = 0;
+		cube.position.z = 0;
+		cloud.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = 0;
+		cube.position.y = 10;
+		cube.position.z = 75;
+		cloud.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = -75;
+		cube.position.y = -10;
+		cube.position.z = 75;
+		cloud.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = 75;
+		cube.position.y = -10;
+		cube.position.z = 0;
+		cloud.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = 0;
+		cube.position.y = -10;
+		cube.position.z = -75;
+		cloud.add(cube);
+
+		cloud.position.x = Math.abs(random_coordinate());
+		cloud.position.y = 300;
+		cloud.position.z = Math.abs(random_coordinate());
+		scene.add(cloud);
+
+		var cloud2 = new THREE.Object3D();
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = 0;
+		cube.position.y = 0;
+		cube.position.z = 0;
+		cloud2.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = -75;
+		cube.position.y = 10;
+		cube.position.z = -75;
+		cloud2.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = -75;
+		cube.position.y = 0;
+		cube.position.z = 0;
+		cloud2.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = -75;
+		cube.position.y = -10;
+		cube.position.z = 75;
+		cloud2.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = 75;
+		cube.position.y = -10;
+		cube.position.z = 0;
+		cloud2.add(cube);
+
+		var cube = new THREE.Mesh( geometry, material);
+		cube.position.x = 0;
+		cube.position.y = -10;
+		cube.position.z = -75;
+		cloud2.add(cube);
+
+		cloud2.position.x = -Math.abs(random_coordinate());
+		cloud2.position.y = 300;
+		cloud2.position.z = -Math.abs(random_coordinate());
+		scene.add(cloud2);
+
 
 	// ====== Lights ================
 
@@ -167,25 +252,25 @@ function new_person() {
 		return person;
 } 
 
-function random_person_coordinate() {
-	//we generate a spot on the grid and then also add a bit of variability within the spot just so people aren't constantly on top of each other
+function random_coordinate() {
+	//we generate a spot on the grid
 	return Math.floor( ( Math.random() * 1000 - 500 ) / 50 ) * 50 + 25;
 }
 
 function random_person_position() {
 	var pos = {};
-	pos.x = random_person_coordinate();
+	pos.x = random_coordinate();
 	pos.y = 5;
-	pos.z = random_person_coordinate();
+	pos.z = random_coordinate();
 	return pos;
 }
 
 function next_person_position(pos) {
 	//we want to move them in rows and files, not diagonals, so we'll only modify either the x or the z axis
 	if (Math.round(Math.random()) == 0) {
-		return {x:random_person_coordinate(), y: pos.y, z: pos.z};
+		return {x:random_coordinate(), y: pos.y, z: pos.z};
 	} else {
-		return {x: pos.x, y: pos.y, z: random_person_coordinate()};
+		return {x: pos.x, y: pos.y, z: random_coordinate()};
 	}
 }
 
@@ -226,12 +311,6 @@ function animate() {
 
 	render();
 
-}
-
-function movestuff() {
-	for (var i = 0; i < people.length; i++) {
-		//people[i].rotation.y += 0.02;
-	}
 }
 
 function render() {
