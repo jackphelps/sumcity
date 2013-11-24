@@ -5,6 +5,7 @@ var renderer;
 var people = [];
 var building_locations = [];
 var tweens = [];
+var controls;
 
 init();
 animate();
@@ -14,7 +15,7 @@ function init() {
 	container = document.createElement( 'div' );
 	document.body.appendChild( container );
 
-	camera = new THREE.OrthographicCamera( window.innerWidth / - 1.5, window.innerWidth / 1.5, window.innerHeight / 1.3, window.innerHeight / - 1.5, - 1000, 100000 );
+	camera = new THREE.OrthographicCamera( window.innerWidth / - 1.5, window.innerWidth / 1.5, window.innerHeight / 1.1, window.innerHeight / - 1.5, - 1000, 100000 );
 	camera.position.x = 200;
 	camera.position.y = 100;
 	camera.position.z = 200;
@@ -23,8 +24,17 @@ function init() {
 
 	// ====== Grid ================
 
-	var size = 500, step = 50;
+	var size = 550, step = 50;
+	//plane (thin cube looks better than actual plane when rotating around)
+	var geometry = new THREE.CubeGeometry(size*2,1,size*2);
+	var material = new THREE.MeshLambertMaterial({color:0x666666});
+	var plane = new THREE.Mesh(geometry,material);
+	plane.position.x = 0;
+	plane.position.y = 0;
+	plane.position.z = 0;
+	scene.add(plane);
 
+	//gridlines
 	var geometry = new THREE.Geometry();
 
 	for ( var i = - size; i <= size; i += step ) {
@@ -45,14 +55,14 @@ function init() {
 
 	// ====== Buildings ================
 
-	var geometry = new THREE.CubeGeometry(50,50,50);
-	var material =	new THREE.MeshLambertMaterial( { color: 0xffbb00, transparent: true, opacity: 0.95} );
+	var geometry = new THREE.CubeGeometry(35,50,35);
+	var material =	new THREE.MeshLambertMaterial( { color: 0x66ccff, transparent: true, opacity: 0.9} );
 
-	for ( var i = 0; i < 100; i++ ) {
+	for ( var i = 0; i < 250; i++ ) {
 
 		var cube = new THREE.Mesh( geometry, material);
 
-		cube.scale.y = Math.floor( Math.random() * 3 + 1 );
+		cube.scale.y = Math.floor( Math.random() * 5 + 1 );
 
 		var loc = random_loc(building_locations);
 
@@ -66,7 +76,7 @@ function init() {
 
 	// ====== People ================
 
-	for (var i = 0; i < 100; i++) {
+	for (var i = 0; i < 300; i++) {
 
 		people.push(new_person(geometry,material));
 
@@ -204,14 +214,18 @@ function init() {
 	directionalLight.position.normalize();
 	scene.add( directionalLight );
 
-	renderer = new THREE.WebGLRenderer();
+	renderer = new THREE.WebGLRenderer({antialias:true});
 	renderer.setSize( window.innerWidth, window.innerHeight );
 
+	camera.lookAt( scene.position );
+
+	controls = new THREE.OrbitControls(camera, renderer.domElement);
 	container.appendChild( renderer.domElement );
 
 	//
 
 	window.addEventListener( 'resize', onWindowResize, false );
+
 
 }
 
@@ -254,13 +268,13 @@ function new_person() {
 
 function random_coordinate() {
 	//we generate a spot on the grid
-	return Math.floor( ( Math.random() * 1000 - 500 ) / 50 ) * 50 + 25;
+	return Math.floor( ( Math.random() * 1000 - 500 ) / 50 ) * 50 + 50;
 }
 
 function random_person_position() {
 	var pos = {};
 	pos.x = random_coordinate();
-	pos.y = 5;
+	pos.y = 8;
 	pos.z = random_coordinate();
 	return pos;
 }
@@ -317,10 +331,7 @@ function render() {
 
 	var timer = Date.now() * 0.0001;
 
-	camera.position.x = Math.cos( timer ) * 200;
-	camera.position.z = Math.sin( timer ) * 200;
-	camera.lookAt( scene.position );
-
 	renderer.render( scene, camera );
+	controls.update();
 
 }
