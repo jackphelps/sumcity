@@ -3,10 +3,16 @@ var container,
     camera,
     scene,
     renderer,
-    people = [],
+    people            = [],
+    clouds            = [],
     buildingLocations = [],
-    tweens = [],
+    tweens            = [],
     controls;
+
+var squareSize  = 50,
+    gridSquares = 20,
+    gridSize    = squareSize * gridSquares,
+    planeHeight = squareSize;
 
 function init() {
 
@@ -21,40 +27,48 @@ function init() {
   scene = new THREE.Scene();
 
   // ====== Grid ================
-  var size = 550,
-      step = 50;
 
-  //plane (thin cube looks better than actual plane when rotating around)
-  var planeGeometry = new THREE.CubeGeometry(size*2,1,size*2);
+  //plane
+  var planeGeometry = new THREE.CubeGeometry(gridSize,planeHeight,gridSize);
   var planeMaterial = new THREE.MeshLambertMaterial({color:0x666666});
   var plane = new THREE.Mesh(planeGeometry,planeMaterial);
   plane.position.x = 0;
-  plane.position.y = 0;
+  plane.position.y = planeHeight / 2 * -1;
   plane.position.z = 0;
   scene.add(plane);
 
   //gridlines
-  var lineGeometry = new THREE.Geometry();
 
-  for ( var i = - size; i <= size; i += step ) {
+  var gridOn = true;
 
-    lineGeometry.vertices.push( new THREE.Vector3( - size, 1, i ) );
-    lineGeometry.vertices.push( new THREE.Vector3(   size, 1, i ) );
+  if (gridOn === true) {
 
-    lineGeometry.vertices.push( new THREE.Vector3( i, 1, - size ) );
-    lineGeometry.vertices.push( new THREE.Vector3( i, 1,   size ) );
+    var lineGeometry = new THREE.Geometry();
+
+    for ( var i = - gridSize/2; i <= gridSize/2; i += squareSize ) {
+
+      lineGeometry.vertices.push( new THREE.Vector3( - gridSize/2, 1, i ) );
+      lineGeometry.vertices.push( new THREE.Vector3(   gridSize/2, 1, i ) );
+
+      lineGeometry.vertices.push( new THREE.Vector3( i, 1, - gridSize/2 ) );
+      lineGeometry.vertices.push( new THREE.Vector3( i, 1,   gridSize/2 ) );
+
+    }
+
+    var lineMaterial = new THREE.LineBasicMaterial( { color: 0x555555, opacity: 0.2 } );
+
+    var line = new THREE.Line( lineGeometry, lineMaterial );
+    line.type = THREE.LinePieces;
+    scene.add( line );
 
   }
 
-  var lineMaterial = new THREE.LineBasicMaterial( { color: 0x555555, opacity: 0.2 } );
-
-  var line = new THREE.Line( lineGeometry, lineMaterial );
-  line.type = THREE.LinePieces;
-  scene.add( line );
-
   // ====== Buildings ================
 
-  var buildingGeometry = new THREE.CubeGeometry(35,50,35);
+  var streetdim = Math.round(squareSize * 0.3);
+  var buildingdim = squareSize - streetdim;
+
+  var buildingGeometry = new THREE.CubeGeometry(buildingdim,squareSize,buildingdim);
   var buildingMaterial =  new THREE.MeshLambertMaterial( { color: 0x66ccff, transparent: true, opacity: 0.9} );
 
   for ( var i = 0; i < 250; i++ ) {
@@ -66,12 +80,16 @@ function init() {
     var loc = randomLoc(buildingLocations);
 
     cube.position.x = loc.x;
-    cube.position.y = (cube.scale.y * 50) / 2;
+    cube.position.y = (cube.scale.y * squareSize) / 2;
     cube.position.z = loc.z;
     
     buildingLocations.push(loc);
     scene.add(cube);
   }
+
+  // ====== put in some parks =====
+
+  
 
   // ====== People ================
 
@@ -102,7 +120,7 @@ function init() {
       [0,10,75],
       [-75,-10,75],
       [75,-10,0],
-      [0,-10,75]
+      [0,-10,-75]
     ]
   ));
   clouds.push(newCloud(
@@ -142,7 +160,7 @@ function init() {
   lights[lights.length-1].position.z = 0;
   lights[lights.length-1].position.normalize();
 
-  lights.push(new THREE.DirectionalLight( 0x333333 ));
+  lights.push(new THREE.DirectionalLight( 0x444444 ));
   lights[lights.length-1].position.x = -0.3;
   lights[lights.length-1].position.y = 0;
   lights[lights.length-1].position.z = 0;
@@ -190,7 +208,7 @@ function randomLoc(occupiedCoordinates) {
 }
 
 function makeLoc() {
-  return {x: Math.floor( ( Math.random() * 1000 - 500 ) / 50 ) * 50 + 25, z: Math.floor( ( Math.random() * 1000 - 500 ) / 50 ) * 50 + 25};
+  return {x: Math.floor( ( Math.random() * gridSize - gridSize/2 ) / squareSize ) * squareSize + squareSize/2, z: Math.floor( ( Math.random() * gridSize - gridSize/2 ) / squareSize ) * squareSize + squareSize/2};
 }
 
 function checkLocIsUnique(xz,ar) {
@@ -210,7 +228,7 @@ function checkLocIsUnique(xz,ar) {
 function newPerson() {
   var dim = 13;
   var personGeometry = new THREE.CubeGeometry(dim,dim,dim);
-  var personMaterial = new THREE.MeshLambertMaterial( {color: 0xff00bb, transparent: true, opacity: 0.6} );
+  var personMaterial = new THREE.MeshLambertMaterial( {color: 0xff00bb, transparent: true, opacity: 0.7} );
   var person = new THREE.Mesh( personGeometry, personMaterial);
   person.position = randomPersonPosition();
   person.speed = 0.05;
@@ -218,8 +236,9 @@ function newPerson() {
 }
 
 function randomCoordinate() {
-  //we generate a spot on the grid
-  return Math.floor( ( Math.random() * 1000 - 500 ) / 50 ) * 50 + 50;
+  //a random spot that falls right on the gridlines
+  var coord = Math.round(Math.random() * gridSquares - (gridSquares / 2)) * squareSize;
+  return coord;
 }
 
 function randomPersonPosition() {
@@ -242,7 +261,7 @@ function nextPersonPosition(pos) {
 function newCloud(positionArray) {
   var cloudCubeSize = 75;
   var cloudGeometry = new THREE.CubeGeometry(cloudCubeSize,cloudCubeSize,cloudCubeSize);
-  var cloudMaterial = new THREE.MeshLambertMaterial( { color: 0xccccff, transparent:true, opacity:0.6} );
+  var cloudMaterial = new THREE.MeshLambertMaterial( { color: 0xccccff, transparent:true, opacity:0.7} );
   //add a bunch of child cubes at the specified
   var cloud = new THREE.Object3D();
   for (var i = 0; i < positionArray.length; i++) {
